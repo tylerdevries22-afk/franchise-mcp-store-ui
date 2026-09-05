@@ -120,8 +120,8 @@ export function McpStore({ entries, mode = 'manage', outcome, selectedIds = [],
   };
   const labels = mode === 'select' ? ['All', 'Included', 'Not included'] : ['All', 'Connected', 'Not connected'];
   return <section className={styles.root} aria-labelledby="mcp-store-heading">
-    <header className={styles.hero}><div><h2 id="mcp-store-heading">Connectors</h2>
-      <p>Connect once for the organization. Credentials remain tenant-scoped and server-only.</p></div>
+    <header className={styles.hero}><div><h2 id="mcp-store-heading" tabIndex={-1}>Connectors</h2>
+      <p>Connect once for the organization. Tokens rotate and read-only syncs resume automatically.</p></div>
       <label className={styles.search}><span>Search connectors</span><b aria-hidden="true">⌕</b>
         <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" />
       </label></header>
