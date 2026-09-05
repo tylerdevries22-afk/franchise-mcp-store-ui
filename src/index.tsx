@@ -40,6 +40,11 @@ function statusLabel(status: McpStoreStatus): string {
   return 'Not connected';
 }
 
+function selectionLabel(entry: McpStoreEntry, selected: boolean): string {
+  if (selected) return 'Included';
+  return entry.selectable === false ? 'Unavailable' : 'Add';
+}
+
 function EntryIcon({ entry, size, render }: {
   readonly entry: McpStoreEntry;
   readonly size: number;
@@ -72,7 +77,7 @@ function PopularCard({ entry, mode, selected, onToggle, renderIcon }: {
   if (mode === 'select') return <button type="button" className={`${styles.popularCard} ${selected ? styles.selected : ''}`}
     disabled={entry.selectable === false} aria-pressed={selected} onClick={onToggle}>
     <EntryIcon entry={entry} size={38} render={renderIcon} /><strong>{entry.name}</strong>
-    <span className={styles.action}>{selected ? 'Included' : 'Add'}</span>
+    <span className={styles.action}>{selectionLabel(entry, selected)}</span>
   </button>;
   return <article className={styles.popularCard}>
     <EntryIcon entry={entry} size={38} render={renderIcon} />
@@ -93,7 +98,7 @@ function DirectoryRow({ entry, mode, selected, onToggle, renderIcon }: {
       {entry.readiness ? <em>{entry.readiness}</em> : null}</span></div>
     <span className={styles.type}>{entry.type}</span>
     <span className={styles.rowAction}>{mode === 'select'
-      ? <span className={styles.action}>{selected ? 'Included' : 'Add'}</span>
+      ? <span className={styles.action}>{selectionLabel(entry, selected)}</span>
       : <ManageAction entry={entry} />}</span></>;
   if (mode === 'select') return <button type="button" className={`${styles.row} ${selected ? styles.selected : ''}`}
     disabled={entry.selectable === false} aria-pressed={selected} onClick={onToggle}>{content}</button>;

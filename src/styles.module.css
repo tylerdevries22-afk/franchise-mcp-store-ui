@@ -15,6 +15,7 @@
 .popular > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
 .popularCard { position: relative; display: flex; min-width: 0; min-height: 70px; box-sizing: border-box; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--mcp-line); border-radius: 12px; background: var(--mcp-surface); color: var(--mcp-ink); font: inherit; text-align: left; transition: border-color .16s ease, background .16s ease; }
 button.popularCard { width: 100%; cursor: pointer; }
+button.popularCard:disabled, button.row:disabled { cursor: not-allowed; opacity: .58; }
 .popularCard:hover, .row:hover { border-color: var(--mcp-line-strong); background: var(--mcp-hover); }
 .popularCard strong, .cardLink { min-width: 0; flex: 1; overflow: hidden; color: var(--mcp-ink); font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .cardLink::after { position: absolute; inset: 0; content: ''; }

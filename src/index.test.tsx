@@ -22,4 +22,10 @@ describe('McpStore', () => {
     expect(html).toContain('Included');
     expect(html).not.toContain('href=');
   });
+
+  it('labels a disabled connector honestly', () => {
+    const html = renderToStaticMarkup(<McpStore entries={[{ ...ENTRIES[0], selectable: false }]} mode="select" />);
+    expect(html).toContain('Unavailable');
+    expect(html).toContain('disabled');
+  });
 });
