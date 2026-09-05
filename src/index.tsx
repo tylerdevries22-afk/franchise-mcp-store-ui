@@ -35,14 +35,25 @@ export type McpStoreProps = {
 
 function statusLabel(status: McpStoreStatus): string {
   if (status === 'connected') return 'Connected';
-  if (status === 'reconnect') return '△ Reconnect';
-  if (status === 'unavailable') return '? Status unavailable';
+  if (status === 'reconnect') return 'Reconnect';
+  if (status === 'unavailable') return 'Unavailable';
   return 'Not connected';
 }
 
 function selectionLabel(entry: McpStoreEntry, selected: boolean): string {
   if (selected) return 'Included';
   return entry.selectable === false ? 'Unavailable' : 'Add';
+}
+
+function SelectionStatus({ entry, selected }: {
+  readonly entry: McpStoreEntry;
+  readonly selected: boolean;
+}) {
+  const unavailable = entry.selectable === false;
+  return <span className={unavailable ? styles.unavailableBadge : styles.choiceBadge}
+    data-state={unavailable ? 'unavailable' : selected ? 'included' : 'available'}>
+    {selectionLabel(entry, selected)}
+  </span>;
 }
 
 function EntryIcon({ entry, size, render }: {
@@ -77,7 +88,7 @@ function PopularCard({ entry, mode, selected, onToggle, renderIcon }: {
   if (mode === 'select') return <button type="button" className={`${styles.popularCard} ${selected ? styles.selected : ''}`}
     disabled={entry.selectable === false} aria-pressed={selected} onClick={onToggle}>
     <EntryIcon entry={entry} size={38} render={renderIcon} /><strong>{entry.name}</strong>
-    <span className={styles.action}>{selectionLabel(entry, selected)}</span>
+    <SelectionStatus entry={entry} selected={selected} />
   </button>;
   return <article className={styles.popularCard}>
     <EntryIcon entry={entry} size={38} render={renderIcon} />
@@ -98,7 +109,7 @@ function DirectoryRow({ entry, mode, selected, onToggle, renderIcon }: {
       {entry.readiness ? <em>{entry.readiness}</em> : null}</span></div>
     <span className={styles.type}>{entry.type}</span>
     <span className={styles.rowAction}>{mode === 'select'
-      ? <span className={styles.action}>{selectionLabel(entry, selected)}</span>
+      ? <SelectionStatus entry={entry} selected={selected} />
       : <ManageAction entry={entry} />}</span></>;
   if (mode === 'select') return <button type="button" className={`${styles.row} ${selected ? styles.selected : ''}`}
     disabled={entry.selectable === false} aria-pressed={selected} onClick={onToggle}>{content}</button>;
@@ -124,7 +135,7 @@ export function McpStore({ entries, mode = 'manage', outcome, selectedIds = [],
       ? selectedIds.filter((id) => id !== entry.id) : [...new Set([...selectedIds, entry.id])]);
   };
   const labels = mode === 'select' ? ['All', 'Included', 'Not included'] : ['All', 'Connected', 'Not connected'];
-  return <section className={styles.root} aria-labelledby="mcp-store-heading">
+  return <section className={`${styles.root} ${styles[mode]}`} aria-labelledby="mcp-store-heading">
     <header className={styles.hero}><div><h2 id="mcp-store-heading" tabIndex={-1}>Connectors</h2>
       <p>Connect once for the organization. Tokens rotate and read-only syncs resume automatically.</p></div>
       <label className={styles.search}><span>Search connectors</span><b aria-hidden="true">⌕</b>
@@ -140,7 +151,7 @@ export function McpStore({ entries, mode = 'manage', outcome, selectedIds = [],
       {(['all', 'connected', 'not_connected'] as const).map((value, index) => <button key={value} type="button"
         role="tab" aria-selected={filter === value} onClick={() => setFilter(value)}>{labels[index]}</button>)}
     </div>
-    <div className={styles.directory}><div className={styles.directoryHead}><span>Connector</span><span>Type</span><span>Status</span></div>
+    <div className={styles.directory} id="mcp-store-directory"><div className={styles.directoryHead}><span>Connector</span><span>Type</span><span>Status</span></div>
       {filtered.map((entry) => <DirectoryRow key={entry.id} entry={entry} mode={mode}
         selected={selected.has(entry.id)} onToggle={() => toggle(entry)} renderIcon={renderIcon} />)}
       {filtered.length === 0 ? <p className={styles.empty}>No connectors match this view.</p> : null}</div>
