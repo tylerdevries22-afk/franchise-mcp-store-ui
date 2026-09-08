@@ -1,2 +1,10 @@
 node_modules/
 coverage/
+.audit/
+.adaptive-context/
+dist/
+work/
+*.tgz
+.env
+.env.*
+!.env.example
