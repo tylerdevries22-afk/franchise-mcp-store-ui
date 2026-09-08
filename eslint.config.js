@@ -9,4 +9,5 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   hooks.configs['recommended-latest'],
   { files: ['src/**/*.{ts,tsx}'], languageOptions: { globals: globals.browser } },
+  { files: ['scripts/**/*.mjs'], languageOptions: { globals: globals.node } },
 );

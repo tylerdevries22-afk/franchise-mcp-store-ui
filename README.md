@@ -55,10 +55,42 @@ for hosts that need the same badge or step list on a detail page.
 `McpStoreEntry.setup` and the `manual` status are additive: an existing host
 compiles and behaves unchanged without them.
 
-Both consumers should pin the same release tag and add
-`franchise-mcp-store-ui` to Next.js `transpilePackages`. Run `npm run lint`,
-`npm run typecheck`, and `npm test` before publishing a tag.
+The 1.3 package exports compiled ESM and TypeScript declarations. React consumers
+need React 19 and a bundler that handles CSS Modules; server helpers need Node 22+.
+The package no longer requires consumers to transpile raw TypeScript. It is not a
+drop-in UI for non-React applications or a complete MCP gateway.
+
+Pin one reviewed release or full commit across consumers. A workspace copy and
+a Git dependency do not update together. See [adoption](docs/adoption.md) for
+installation, host responsibilities, and compatibility checks.
 
 Server routes may import `franchise-mcp-store-ui/oauth` for the shared signed
 state, PKCE, nonce, and browser-binding primitives. The subpath is Node-only;
 never import it from a client component.
+
+## Persistence and verification
+
+The optional [Supabase integration](docs/supabase.md) supplies tenant memberships,
+safe installation projections, private secret references, atomic single-use OAuth
+consumption, and an optional Vault adapter. The UI itself performs no database writes.
+Use the host's authenticated backend to authorize and persist user intent.
+
+```sh
+npm ci
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run test:package
+npm run test:db
+npm audit --audit-level=moderate
+```
+
+Database tests create and stop their own local PostgreSQL cluster using a private
+Unix socket. Set `MCP_STORE_PG_BIN` if PostgreSQL binaries are not discoverable.
+They do not accept a database URL. Auth identity and Vault APIs are test doubles:
+hosted JWT verification, real Vault encryption, and provider connectivity still
+require a staging test. See [verification](docs/verification.md).
+
+This package does not rotate provider tokens, run sync workers, back up Storage
+objects, or certify third-party MCP servers. Those capabilities must be implemented
+and verified by the host before it reports a connection as healthy.

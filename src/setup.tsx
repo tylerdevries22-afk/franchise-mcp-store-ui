@@ -1,6 +1,7 @@
 'use client';
 
 import styles from './styles.module.css';
+import { safeHref } from './links.js';
 
 export type McpStoreSetupKind = 'one-click-oauth' | 'api-key' | 'operator-portal';
 
@@ -43,12 +44,6 @@ export function SetupBadge({ setup }: { readonly setup: McpStoreSetup }) {
  * else degrades to plain text. That keeps `javascript:` and `data:` unreachable
  * even if a host passes one.
  */
-function safeHref(href: string): { readonly href: string; readonly external: boolean } | null {
-  if (href.startsWith('https://')) return { href, external: true };
-  if (href.startsWith('/') && !href.startsWith('//')) return { href, external: false };
-  return null;
-}
-
 function StepText({ step }: { readonly step: McpStoreSetupStep }) {
   const target = step.href ? safeHref(step.href) : null;
   if (!target) return <>{step.text}</>;
