@@ -47,12 +47,57 @@ export function Integrations() { return <McpStore entries={entries} />; }
 
 ## Existing consumers
 
-Stillpoint currently pins `v1.1.0`; Coffee Story uses its own
-`packages/franchise-mcp-store-ui` workspace copy (1.2.0). Replace the duplication
-with one reviewed package version as a separate consumer change. Run each host's
-typecheck and browser tests, then its provider smoke matrix, before deployment.
-Preserve each host's existing tables until a counted, validated backfill and rollback
-plan is approved. The new schema does not migrate legacy `agent_ops` data automatically.
+As of 2026-09-11:
+
+| Host | Pin style | Current pin | PKCE verifier placement |
+| --- | --- | --- | --- |
+| Elevate Web Dev Solutions | `github-commit` | `#9734ee3…` (post-`v1.3.0` portable React fix) | **Vault** UUID via `vaultCreateVerifier` (matches this contract) |
+| Coffee Story HQ | GitHub Release **tarball** | `v1.3.0` (`franchise-mcp-store-ui-1.3.0.tgz`) | **Cookie JSON** `{ binding, verifier }` — contract break |
+| Stillpoint Builders | GitHub Release **tarball** | `v1.3.0` | **Cookie JSON** `{ binding, verifier }` — contract break |
+
+Coffee Story still has an empty remnant `packages/franchise-mcp-store-ui/` (nested
+`node_modules` only); HQ depends on the release tarball, not a workspace copy.
+
+There is **no `v1.3.1` tag** yet. Cutting `v1.3.1` from `9734ee3` (or later) is the
+preferred way to move CS/Stillpoint onto the same artifact Elevate already consumes.
+Until then, hosts may temporarily pin the full commit SHA.
+
+**Do not** change Coffee Story / Stillpoint authorize cookies to drop the PKCE
+verifier until a Vault (or other secret-manager) write/read/delete path is wired and
+tested — see host adopt draft PRs and `_agent-data/audits/mcp-hosts-adopt-20260911`.
+
+Run each host's typecheck and browser tests, then its provider smoke matrix, before
+deployment. Preserve each host's existing tables until a counted, validated backfill
+and rollback plan is approved. The new schema does not migrate legacy `agent_ops`
+data automatically.
+
+## Shared catalog + host overlays
+
+Import canonical provider descriptors from `franchise-mcp-store-ui/catalog`. Hosts
+**must** supply an overlay for connectability — the shared registry never enables
+Connect by itself (Elevate demote-unwired / `CONNECTABLE_PROVIDER_IDS` pattern).
+See `docs/prd/franchise-mcp-autonomy-plan.md`.
+
+```ts
+import {
+  FRANCHISE_PROVIDER_CATALOG,
+  projectFranchiseCatalog,
+} from 'franchise-mcp-store-ui/catalog';
+
+const entries = projectFranchiseCatalog({
+  overlay: {
+    connectable: new Set(['google-suite']), // certify before adding
+    connectHref: (id) => `/api/integrations/${id}/start`,
+  },
+});
+```
+
+- Adding a descriptor in the package propagates **metadata** after a version bump /
+  host sync PR.
+- Making a provider connectable is a **per-host certification** (OAuth client env,
+  routes, Vault, identity probe, tests). Do not auto-add ids to `connectable`.
+- Stillpoint (and similar) may pass `aliases` / `hostExclusive` for non-canonical keys.
+- Keep OAuth client secrets and per-host `project_key` / tenant namespaces host-owned.
 
 ## OAuth callback sequence
 

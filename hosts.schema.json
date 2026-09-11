@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/tylerdevries22-afk/franchise-mcp-store-ui/hosts.schema.json",
+  "title": "franchise-mcp-store-ui host registry",
+  "type": "object",
+  "required": ["packageName", "githubRepo", "hosts"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "packageName": { "type": "string", "const": "franchise-mcp-store-ui" },
+    "githubRepo": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+    "releaseAssetPattern": { "type": "string" },
+    "hosts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "repo", "defaultBranch", "dependencies"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "repo": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+          "defaultBranch": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string" },
+          "dependencies": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["packageJson", "style"],
+              "additionalProperties": false,
+              "properties": {
+                "packageJson": { "type": "string", "minLength": 1 },
+                "style": {
+                  "type": "string",
+                  "enum": ["release-tarball", "github-commit", "github-tag"]
+                },
+                "lockfile": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
