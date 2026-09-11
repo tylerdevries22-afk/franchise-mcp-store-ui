@@ -9,7 +9,7 @@
  * Primary distribution is the GitHub Release tarball (hosts already pin that URL).
  * npm publish runs only when NPM_TOKEN is set (or the environment is already logged in).
  */
-import { existsSync, unlinkSync } from 'node:fs';
+import { accessSync, unlinkSync, constants as fsConstants } from 'node:fs';
 import path from 'node:path';
 import {
   ROOT,
@@ -79,7 +79,11 @@ async function main() {
   const packed = JSON.parse(pack.stdout);
   const tarballName = packed[0]?.filename || `franchise-mcp-store-ui-${next}.tgz`;
   const tarballPath = path.join(ROOT, tarballName);
-  if (!existsSync(tarballPath)) throw new Error(`Expected tarball missing: ${tarballPath}`);
+  try {
+    accessSync(tarballPath, fsConstants.R_OK);
+  } catch {
+    throw new Error(`Expected tarball missing: ${tarballPath}`);
+  }
   console.log(`Packed ${tarballName}`);
 
   if (dry) {

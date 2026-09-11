@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -105,11 +105,16 @@ export function ensureChangelog(version, notes) {
   const file = path.join(ROOT, rel);
   const today = new Date().toISOString().slice(0, 10);
   const entry = `## [${version}] - ${today}\n\n${notes.trim()}\n\n`;
-  if (!existsSync(file)) {
-    writeFileSync(file, `# Changelog\n\n${entry}`);
-    return;
+  let current = '';
+  try {
+    current = readFileSync(file, 'utf8');
+  } catch (err) {
+    if (err && err.code === 'ENOENT') {
+      writeFileSync(file, `# Changelog\n\n${entry}`);
+      return;
+    }
+    throw err;
   }
-  const current = readFileSync(file, 'utf8');
   if (current.includes(`## [${version}]`)) return;
   const marker = '# Changelog';
   if (current.startsWith(marker)) {

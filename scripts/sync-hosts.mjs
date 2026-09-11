@@ -9,7 +9,7 @@
  * Requires `gh` auth with write access to each host repo.
  * In GitHub Actions, set secret HOST_SYNC_TOKEN (PAT with repo scope across hosts).
  */
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
@@ -86,8 +86,13 @@ Automated by \`scripts/sync-hosts.mjs\` from \`${githubRepo}\`.
     const changed = [];
     for (const dep of host.dependencies) {
       const abs = path.join(work, dep.packageJson);
-      if (!existsSync(abs)) throw new Error(`Missing ${dep.packageJson} in ${host.repo}`);
-      const before = readFileSync(abs, 'utf8');
+      let before;
+      try {
+        before = readFileSync(abs, 'utf8');
+      } catch (err) {
+        if (err && err.code === 'ENOENT') throw new Error(`Missing ${dep.packageJson} in ${host.repo}`);
+        throw err;
+      }
       const value = depValueFor(dep.style, githubRepo, version, sha);
       const after = replaceDependency(before, packageName, value);
       if (before === after) {
@@ -98,18 +103,15 @@ Automated by \`scripts/sync-hosts.mjs\` from \`${githubRepo}\`.
       changed.push(dep.packageJson);
 
       if (refreshLockfile && dep.lockfile) {
-        const lockAbs = path.join(work, dep.lockfile);
         const pkgDir = path.dirname(abs);
-        if (existsSync(lockAbs)) {
-          console.log(`Refreshing lockfile via npm install in ${path.dirname(dep.packageJson)}…`);
-          const install = run(
-            'npm',
-            ['install', `${packageName}@${value}`, '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund'],
-            { cwd: pkgDir, allowFail: true, stdio: 'inherit' },
-          );
-          if (install.status === 0) changed.push(dep.lockfile);
-          else console.warn(`Lockfile refresh failed for ${dep.packageJson}; PR will include package.json only.`);
-        }
+        console.log(`Refreshing lockfile via npm install in ${path.dirname(dep.packageJson)}…`);
+        const install = run(
+          'npm',
+          ['install', `${packageName}@${value}`, '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund'],
+          { cwd: pkgDir, allowFail: true, stdio: 'inherit' },
+        );
+        if (install.status === 0) changed.push(dep.lockfile);
+        else console.warn(`Lockfile refresh failed for ${dep.packageJson}; PR will include package.json only.`);
       }
     }
 
