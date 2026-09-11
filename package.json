@@ -41,7 +41,11 @@
     "prepare": "npm run build",
     "prepack": "npm run build",
     "test:package": "npm run build && node scripts/test-package.mjs",
-    "test:db": "node scripts/test-db.mjs"
+    "test:db": "node scripts/test-db.mjs",
+    "release": "node scripts/release.mjs",
+    "release:dry": "node scripts/release.mjs --dry-run --skip-verify",
+    "sync-hosts": "node scripts/sync-hosts.mjs",
+    "sync-hosts:dry": "node scripts/sync-hosts.mjs --dry-run"
   },
   "peerDependencies": {
     "react": ">=19 <20"

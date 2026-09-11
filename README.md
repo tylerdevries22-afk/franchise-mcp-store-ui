@@ -62,7 +62,9 @@ drop-in UI for non-React applications or a complete MCP gateway.
 
 Pin one reviewed release or full commit across consumers. A workspace copy and
 a Git dependency do not update together. See [adoption](docs/adoption.md) for
-installation, host responsibilities, and compatibility checks.
+installation, host responsibilities, and compatibility checks. Release tagging,
+GitHub Release tarballs, and host bump PRs are documented in
+[release-and-sync](docs/release-and-sync.md).
 
 Server routes may import `franchise-mcp-store-ui/oauth` for the shared signed
 state, PKCE, nonce, and browser-binding primitives. The subpath is Node-only;

@@ -77,3 +77,8 @@ plan is approved. The new schema does not migrate legacy `agent_ops` data automa
 7. Delete expired/consumed verifier secrets, clear the browser cookie, and record a
    redacted outcome. PKCE secret cleanup is host-owned; the optional Vault adapter
    manages installation credentials only.
+
+## Releases and host bumps
+
+See [release-and-sync.md](release-and-sync.md) for version bumps, GitHub Release
+tarballs, and automated PRs into Elevate, Coffee Story, and StillPoint.

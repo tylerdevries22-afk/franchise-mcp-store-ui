@@ -1,0 +1,82 @@
+name: Release
+
+# Creates a GitHub Release (+ optional npm publish) for franchise-mcp-store-ui.
+# Primary host install path is the release tarball / git tag (see docs/release-and-sync.md).
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semver bump when version is empty
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      version:
+        description: Explicit X.Y.Z (overrides bump when set)
+        required: false
+        type: string
+      sync_hosts:
+        description: After release, open host bump PRs
+        type: boolean
+        default: true
+      skip_verify:
+        description: Skip lint/typecheck/tests (emergency only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          # HOST_SYNC_TOKEN (optional PAT) lets the job push + open cross-repo PRs.
+          token: ${{ secrets.HOST_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.HOST_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_BUMP: ${{ inputs.bump }}
+          INPUT_SYNC: ${{ inputs.sync_hosts }}
+          INPUT_SKIP_VERIFY: ${{ inputs.skip_verify }}
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [ -z "${NPM_TOKEN:-}" ]; then
+            ARGS+=(--skip-npm)
+          fi
+          if [ "${INPUT_SKIP_VERIFY}" = "true" ]; then
+            ARGS+=(--skip-verify)
+          fi
+          if [ -n "${INPUT_VERSION}" ]; then
+            ARGS+=(--version "${INPUT_VERSION}")
+          else
+            ARGS+=(--bump "${INPUT_BUMP}")
+          fi
+          if [ "${INPUT_SYNC}" = "true" ]; then
+            ARGS+=(--sync)
+          fi
+          git checkout main
+          git pull --ff-only origin main
+          node scripts/release.mjs "${ARGS[@]}"
