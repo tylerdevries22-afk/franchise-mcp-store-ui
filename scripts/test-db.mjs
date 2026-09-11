@@ -4,6 +4,20 @@ import { startDatabase } from './db-harness.mjs';
 
 const db = startDatabase();
 try {
+  // Packaged local shim must apply (and re-apply) on disposable PG — LOCAL/CI ONLY.
+  {
+    const shim = startDatabase();
+    try {
+      shim.file('supabase/tests/bootstrap.sql');
+      shim.file('supabase/bootstrap/local/vault_shim.sql');
+      shim.file('supabase/bootstrap/local/vault_shim.sql');
+      const id = shim.sql("select vault.create_secret('test-only-shim')").trim();
+      assert.match(id, /^[0-9a-f-]{36}$/i);
+    } finally {
+      shim.stop();
+    }
+  }
+
   db.file('supabase/tests/bootstrap.sql');
   for (const file of readdirSync('supabase/migrations').sort()) {
     db.file(`supabase/migrations/${file}`);

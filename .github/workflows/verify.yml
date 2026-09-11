@@ -11,7 +11,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -20,6 +20,20 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - name: Install PostgreSQL server (for test:db harness)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql postgresql-contrib postgresql-16
+          PG_BIN="$(pg_config --bindir 2>/dev/null || true)"
+          if [ -z "$PG_BIN" ] || [ ! -x "$PG_BIN/initdb" ]; then
+            PG_BIN="$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -1)"
+          fi
+          echo "Using PostgreSQL bindir: $PG_BIN"
+          "$PG_BIN/initdb" --version
+          "$PG_BIN/pg_ctl" --version
+          "$PG_BIN/psql" --version
+          echo "MCP_STORE_PG_BIN=$PG_BIN" >> "$GITHUB_ENV"
+          echo "$PG_BIN" >> "$GITHUB_PATH"
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck

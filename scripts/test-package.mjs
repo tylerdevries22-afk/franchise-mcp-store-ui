@@ -12,6 +12,10 @@ const run = (command, args, cwd = root) => execFileSync(command, args,
 const packed = JSON.parse(run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', consumer]))[0];
 assert.ok(packed.files.some((file) => file.path === 'dist/oauth.d.ts'));
 assert.ok(packed.files.some((file) => file.path === 'supabase/migrations/202609080001_mcp_store.sql'));
+assert.ok(packed.files.some((file) => file.path === 'supabase/bootstrap/local/vault_shim.sql'));
+assert.ok(packed.files.some((file) => file.path === 'scripts/host-install-migrations.mjs'));
+assert.ok(packed.files.some((file) => file.path === 'dist/catalog.js'));
+assert.ok(packed.files.some((file) => file.path === 'dist/catalog.d.ts'));
 assert.ok(packed.files.every((file) => !/\.test\.|^src\/|^work\/|(^|\/)\.env/.test(file.path)));
 assert.ok(readFileSync('dist/index.js', 'utf8').startsWith("'use client'"));
 writeFileSync(join(consumer, 'package.json'), JSON.stringify({ name: 'mcp-store-consumer-proof', version: '1.0.0', private: true, type: 'module' }));
@@ -30,6 +34,18 @@ const m=createMcpOAuthMaterial('slack',key);
 assert.equal(verifyMcpOAuthState(m.state,'slack',key).provider,'slack');
 `);
 run(process.execPath, ['server.mjs'], consumer);
+writeFileSync(join(consumer, 'catalog.mjs'), `
+import assert from 'node:assert/strict';
+import {FRANCHISE_PROVIDER_CATALOG, projectFranchiseCatalog, listFranchiseProviderIds} from 'franchise-mcp-store-ui/catalog';
+assert.ok(listFranchiseProviderIds().includes('google-suite'));
+const entries = projectFranchiseCatalog({
+  overlay: { connectable: ['google-suite'], connectHref: (id) => '/api/integrations/' + id + '/start' },
+});
+assert.equal(entries.find((e) => e.id === 'google-suite')?.connectHref, '/api/integrations/google-suite/start');
+assert.equal(entries.find((e) => e.id === 'slack')?.status, 'unavailable');
+assert.equal(FRANCHISE_PROVIDER_CATALOG.length, entries.length);
+`);
+run(process.execPath, ['catalog.mjs'], consumer);
 writeFileSync(join(consumer, 'browser.tsx'), `
 import React from 'react';
 import {McpStore, type McpStoreEntry} from 'franchise-mcp-store-ui';
@@ -56,5 +72,5 @@ run(process.execPath, ['ssr.mjs'], consumer);
 run(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '--noEmit', '--strict',
   '--jsx', 'react-jsx', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--target', 'ES2022',
   'browser.tsx'], consumer);
-console.log('PASS: packed files, clean npm install, Node OAuth, browser JS+CSS, browser OAuth rejection, React SSR, consumer TypeScript.');
+console.log('PASS: packed files, catalog export, clean npm install, Node OAuth, browser JS+CSS, browser OAuth rejection, React SSR, consumer TypeScript.');
 console.log(`Packed consumer retained at ${consumer}`);
