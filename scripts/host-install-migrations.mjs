@@ -14,7 +14,7 @@
  */
 import { createHash } from 'node:crypto';
 import {
-  existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync,
+  mkdirSync, readFileSync, writeFileSync, readdirSync, openSync, closeSync, writeSync,
 } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,7 +31,7 @@ function usage(code = 1) {
   --include-vault           Also copy supabase/optional/vault.sql
   --prefix-timestamp <ts>   14-digit timestamp prefix (default: now UTC YYYYMMDDhhmmss)
   --write-provenance <path> Provenance JSON path (default: <host-migrations>/../.mcp-store-provenance.json)
-  --force                   Allow replacing a previously installed file with identical content
+  --force                   Rewrite an existing identical-hash install in place (no duplicate)
   --dry-run                 Print actions without writing`);
   process.exit(code);
 }
@@ -76,8 +76,12 @@ function resolvePath(p) {
 }
 
 function listExisting(dir) {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter((name) => name.endsWith('.sql'));
+  try {
+    return readdirSync(dir).filter((name) => name.endsWith('.sql'));
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return [];
+    throw error;
+  }
 }
 
 function findByHash(dir, hash) {
@@ -93,8 +97,29 @@ function nextName(dir, prefix, suffix, offset = 0) {
   let n = BigInt(prefix) + BigInt(offset);
   for (;;) {
     const name = `${n.toString().padStart(14, '0')}_${suffix}`;
-    if (!existsSync(join(dir, name))) return name;
+    const existing = new Set(listExisting(dir));
+    if (!existing.has(name)) return name;
     n += 1n;
+  }
+}
+
+/** Create a new file exclusively, or truncate an existing path when replacing. */
+function writeBytes(path, bytes, { replace }) {
+  if (replace) {
+    writeFileSync(path, bytes);
+    return;
+  }
+  let fd;
+  try {
+    fd = openSync(path, 'wx', 0o644);
+    writeSync(fd, bytes);
+  } catch (error) {
+    if (error && error.code === 'EEXIST') {
+      throw new Error(`Refusing to overwrite existing ${path}; pass --force or choose another --prefix-timestamp`);
+    }
+    throw error;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
   }
 }
 
@@ -128,11 +153,13 @@ if (!args.dryRun) mkdirSync(hostDir, { recursive: true });
 
 for (const item of sources) {
   const sourcePath = join(packageRoot, item.sourceRel);
-  if (!existsSync(sourcePath)) {
+  let bytes;
+  try {
+    bytes = readFileSync(sourcePath);
+  } catch {
     console.error(`Missing packaged SQL: ${item.sourceRel}`);
     process.exit(1);
   }
-  const bytes = readFileSync(sourcePath);
   const hash = sha256(bytes);
   const existing = findByHash(hostDir, hash);
   if (existing.length > 0 && !args.force) {
@@ -147,14 +174,11 @@ for (const item of sources) {
     });
     continue;
   }
-  const targetName = nextName(hostDir, prefix, item.suffix, item.offset);
+  const replace = args.force && existing.length > 0;
+  const targetName = replace ? existing[0] : nextName(hostDir, prefix, item.suffix, item.offset);
   const targetPath = join(hostDir, targetName);
-  if (existsSync(targetPath) && !args.force) {
-    console.error(`Refusing to overwrite existing ${targetName}; pass --force or choose another --prefix-timestamp`);
-    process.exit(1);
-  }
-  if (!args.dryRun) writeFileSync(targetPath, bytes);
-  console.log(`${args.dryRun ? 'DRY ' : ''}WRITE ${targetName} <- ${item.sourceRel} (sha256 ${hash.slice(0, 12)}…)`);
+  if (!args.dryRun) writeBytes(targetPath, bytes, { replace });
+  console.log(`${args.dryRun ? 'DRY ' : ''}${replace ? 'REPLACE' : 'WRITE'} ${targetName} <- ${item.sourceRel} (sha256 ${hash.slice(0, 12)}…)`);
   installed.push({
     key: item.key,
     source: item.sourceRel,
@@ -162,6 +186,7 @@ for (const item of sources) {
     sha256: hash,
     bytes: bytes.length,
     skipped: false,
+    replaced: replace,
   });
 }
 

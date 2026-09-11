@@ -127,4 +127,21 @@ describe('franchise provider catalog', () => {
     });
     expect(entries.map((row) => row.id).sort()).toEqual(['google-suite', 'jobtread']);
   });
+
+  it('aliases map host installation keys onto canonical rows', () => {
+    const entries = projectFranchiseCatalog({
+      overlay: {
+        aliases: { gmail: 'google-suite' },
+        connectable: ['google-suite'],
+        connectHref: (id) => `/start/${id}`,
+      },
+      installations: [
+        { provider: 'gmail', status: 'connected', accountName: 'ops@example.com' },
+      ],
+    });
+    const google = entries.find((row) => row.id === 'google-suite');
+    expect(google?.status).toBe('connected');
+    expect(google?.accountName).toBe('ops@example.com');
+  });
+
 });

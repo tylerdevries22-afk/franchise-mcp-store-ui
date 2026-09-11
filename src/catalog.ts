@@ -84,7 +84,14 @@ export function projectFranchiseCatalog(options: ProjectFranchiseCatalogOptions)
   const descriptors = options.descriptors ?? FRANCHISE_PROVIDER_CATALOG;
   const { overlay, installations = [] } = options;
   const connectable = asConnectableSet(overlay);
-  const byProvider = new Map(installations.map((row) => [row.provider, row]));
+  const byProvider = new Map<string, FranchiseInstallationSnapshot>();
+  for (const row of installations) {
+    const canonical = resolveCanonicalId(row.provider, overlay.aliases);
+    // First matching install wins; prefer an already-canonical provider key.
+    if (!byProvider.has(canonical) || row.provider === canonical) {
+      byProvider.set(canonical, row);
+    }
+  }
   const include = overlay.include ? new Set(overlay.include) : null;
 
   const entries: McpStoreEntry[] = [];
