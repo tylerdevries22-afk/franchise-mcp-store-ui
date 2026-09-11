@@ -1,0 +1,65 @@
+name: Sync hosts
+
+# Opens version-bump PRs in host repos declared in hosts.json.
+# Requires secret HOST_SYNC_TOKEN (PAT with repo scope on host repos).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: franchise-mcp-store-ui version X.Y.Z (must already be released/tagged)
+        required: true
+        type: string
+      host:
+        description: Optional single host id from hosts.json (elevate-web-dev-solutions | coffee-story | stillpoint-builders)
+        required: false
+        type: string
+      no_lockfile:
+        description: Skip package-lock refresh attempts
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Require HOST_SYNC_TOKEN
+        env:
+          HOST_SYNC_TOKEN: ${{ secrets.HOST_SYNC_TOKEN }}
+        run: |
+          if [ -z "${HOST_SYNC_TOKEN}" ]; then
+            echo "::error::Set repository secret HOST_SYNC_TOKEN (PAT with repo scope on elevate-web-dev-solutions, coffee-story, stillpoint-builders)."
+            exit 1
+          fi
+
+      - name: Open host bump PRs
+        env:
+          GH_TOKEN: ${{ secrets.HOST_SYNC_TOKEN }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_HOST: ${{ inputs.host }}
+          INPUT_NO_LOCKFILE: ${{ inputs.no_lockfile }}
+        run: |
+          set -euo pipefail
+          ARGS=(--version "${INPUT_VERSION}")
+          if [ -n "${INPUT_HOST}" ]; then
+            ARGS+=(--host "${INPUT_HOST}")
+          fi
+          if [ "${INPUT_NO_LOCKFILE}" = "true" ]; then
+            ARGS+=(--no-lockfile)
+          fi
+          node scripts/sync-hosts.mjs "${ARGS[@]}"

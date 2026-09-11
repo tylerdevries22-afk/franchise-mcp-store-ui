@@ -1,0 +1,51 @@
+{
+  "packageName": "franchise-mcp-store-ui",
+  "githubRepo": "tylerdevries22-afk/franchise-mcp-store-ui",
+  "releaseAssetPattern": "franchise-mcp-store-ui-{version}.tgz",
+  "hosts": [
+    {
+      "id": "elevate-web-dev-solutions",
+      "repo": "tylerdevries22-afk/elevate-web-dev-solutions",
+      "defaultBranch": "main",
+      "notes": "Pins via github:owner/repo#full-sha (reviewed commit).",
+      "dependencies": [
+        {
+          "packageJson": "artifacts/elevate-web/package.json",
+          "style": "github-commit",
+          "lockfile": "artifacts/elevate-web/package-lock.json"
+        },
+        {
+          "packageJson": "artifacts/api-server/package.json",
+          "style": "github-commit",
+          "lockfile": "artifacts/api-server/package-lock.json"
+        }
+      ]
+    },
+    {
+      "id": "coffee-story",
+      "repo": "tylerdevries22-afk/coffee-story",
+      "defaultBranch": "main",
+      "notes": "Pins GitHub Release tarball URL used by apps/hq.",
+      "dependencies": [
+        {
+          "packageJson": "apps/hq/package.json",
+          "style": "release-tarball",
+          "lockfile": "apps/hq/package-lock.json"
+        }
+      ]
+    },
+    {
+      "id": "stillpoint-builders",
+      "repo": "tylerdevries22-afk/stillpoint-builders",
+      "defaultBranch": "main",
+      "notes": "StillPoint production app; local clone lives under Dev/stillpoint-builders/stillpoint-builders.",
+      "dependencies": [
+        {
+          "packageJson": "package.json",
+          "style": "release-tarball",
+          "lockfile": "package-lock.json"
+        }
+      ]
+    }
+  ]
+}
