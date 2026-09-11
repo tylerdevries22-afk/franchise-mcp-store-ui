@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactElement } from 'react';
+
 import styles from './styles.module.css';
 
 const FILTERS = ['all', 'connected', 'not_connected'] as const;
@@ -7,7 +9,7 @@ type Filter = typeof FILTERS[number];
 
 export function StoreFilters({ id, filter, labels, onChange }: {
   id: string; filter: Filter; labels: readonly string[]; onChange: (value: Filter) => void;
-}) {
+}): ReactElement {
   return <div className={styles.tabs} role="tablist" aria-label="Connector status">
     {FILTERS.map((value, index) => <button key={value} type="button" id={`${id}-${value}`}
       role="tab" aria-controls={`${id}-directory`} tabIndex={filter === value ? 0 : -1}
