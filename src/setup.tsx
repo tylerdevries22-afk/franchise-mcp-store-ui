@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactElement } from 'react';
+
 import styles from './styles.module.css';
 import { safeHref } from './links.js';
 
@@ -30,7 +32,7 @@ export function setupKindLabel(kind: McpStoreSetupKind): string {
 }
 
 /** Renders the effort promise a reader checks before committing to setup. */
-export function SetupBadge({ setup }: { readonly setup: McpStoreSetup }) {
+export function SetupBadge({ setup }: { readonly setup: McpStoreSetup }): ReactElement {
   const minutes = setup.estimatedMinutes;
   return <span className={styles.setupBadge} data-kind={setup.kind}>
     {setupKindLabel(setup.kind)}
@@ -70,7 +72,7 @@ function SetupLink({ href, text }: {
 export function SetupDisclosure({ entry, setup }: {
   readonly entry: Readonly<{ id: string; name: string }>;
   readonly setup: McpStoreSetup;
-}) {
+}): ReactElement | null {
   if (setup.steps.length === 0) return null;
   return <details className={styles.setup}>
     <summary aria-label={`How to connect ${entry.name}`}>
