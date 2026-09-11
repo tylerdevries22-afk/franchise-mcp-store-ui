@@ -1,8 +1,49 @@
 # Supabase storage contract
 
+## Host install (automated copy)
+
+One-command install copies **byte-identical** packaged SQL into a host migrations
+directory and writes a SHA-256 provenance manifest. Prefer this over hand-copying.
+
+```sh
+npm run host:install-migrations -- \
+  --host-migrations /path/to/host/supabase/migrations \
+  --include-vault \
+  --write-provenance /path/to/host/supabase/.mcp-store-provenance.json
+```
+
+Rules:
+
+- Copied files are content-identical to `supabase/migrations/*` and (when requested)
+  `supabase/optional/vault.sql`. Only the host filename timestamp changes.
+- Never edit an applied version; future package schema changes require a **forward**
+  migration generated from a newer package release.
+- Host adapters (e.g. Elevate `webdev_app` grants, location/`project_key` bridges)
+  stay in **separate** host-owned migrations — do not fold them into the package copy.
+- Re-running against a directory that already has identical hashes is a no-op skip
+  unless `--force` is passed.
+
+### Local Vault shim (CI / developer Postgres only)
+
+`supabase/bootstrap/local/vault_shim.sql` provides plaintext stand-ins for
+`vault.create_secret`, `vault.update_secret`, and `vault.decrypted_secrets` so
+local hosts can apply the optional Vault migration without the hosted extension.
+**Never apply the shim to hosted Supabase.** Production must enable the real Vault
+extension, then apply `optional/vault.sql` as a versioned migration.
+
+### Verify
+
+```sh
+DATABASE_URL=postgres://… npm run db:verify
+# or: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f node_modules/franchise-mcp-store-ui/supabase/verify.sql
+```
+
+---
+
+
 Apply to a disposable staging project first using its normal migration runner.
-Copy `supabase/migrations/202609080001_mcp_store.sql` into the host's versioned
-migrations once, preserving its content/hash. Never rerun or edit an applied version;
+Install via `npm run host:install-migrations` (or copy
+`supabase/migrations/202609080001_mcp_store.sql` once), preserving content/hash. Never rerun or edit an applied version;
 future changes require a forward migration. Direct duplicate execution fails loudly.
 Scripts are transactional and additive to existing application tables. They require
 the standard Supabase `anon`, `authenticated`, `service_role`, `auth.users`, and

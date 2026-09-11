@@ -15,14 +15,21 @@
       "types": "./dist/oauth.d.ts",
       "node": "./dist/oauth.js"
     },
-    "./supabase/*": "./supabase/*"
+    "./supabase/*": "./supabase/*",
+    "./catalog": {
+      "types": "./dist/catalog.d.ts",
+      "import": "./dist/catalog.js"
+    }
   },
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "supabase/migrations",
     "supabase/optional",
+    "supabase/bootstrap",
     "supabase/verify.sql",
+    "scripts/host-install-migrations.mjs",
+    "scripts/db-verify.mjs",
     "docs"
   ],
   "engines": {
@@ -45,7 +52,9 @@
     "release": "node scripts/release.mjs",
     "release:dry": "node scripts/release.mjs --dry-run --skip-verify",
     "sync-hosts": "node scripts/sync-hosts.mjs",
-    "sync-hosts:dry": "node scripts/sync-hosts.mjs --dry-run"
+    "sync-hosts:dry": "node scripts/sync-hosts.mjs --dry-run",
+    "db:verify": "node scripts/db-verify.mjs",
+    "host:install-migrations": "node scripts/host-install-migrations.mjs"
   },
   "peerDependencies": {
     "react": ">=19 <20"

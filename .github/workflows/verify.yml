@@ -11,7 +11,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -20,6 +20,13 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - name: Install PostgreSQL server (for test:db harness)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql postgresql-contrib
+          initdb --version
+          pg_ctl --version
+          psql --version
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
