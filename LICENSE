@@ -1,0 +1,19 @@
+Copyright (c) 2026 Stillpoint Builders LLC. All rights reserved.
+
+SPDX-License-Identifier: LicenseRef-Stillpoint-Proprietary
+
+This software, including its source code, documentation, database migrations
+and release artifacts, is proprietary to Stillpoint Builders LLC (the "Owner").
+
+No licence is granted to anyone other than the Owner to use, copy, modify,
+merge, publish, distribute, sublicense or sell this software, in source or
+compiled form, except with the Owner's prior written permission. The public
+visibility of this repository or of its release artifacts does not grant any
+licence and does not waive any right.
+
+The Owner consumes this package inside its own products. Third-party
+components that this package depends on remain under their own licences.
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
