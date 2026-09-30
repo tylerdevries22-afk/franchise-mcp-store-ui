@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.2] - 2026-09-30
+
+### Changed
+
+- Merge pull request #14 from tylerdevries22-afk/chore/proprietary-license-metadata (680dfb0)
+- fix(deps): patch brace-expansion advisories (GHSA-q2hr-2g5m-vwhr, GHSA-qhr7-859c-m2p7, GHSA-6j4f-fj2g-mc7p) (021dd90)
+- chore(license): declare proprietary licence metadata (520903b)
+- Merge pull request #12 from tylerdevries22-afk/chore/release-v1.3.1 (afb6276)
+
 ## [1.3.1] - 2026-09-11
 
 ### Changed
